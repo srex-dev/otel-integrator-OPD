@@ -1,0 +1,65 @@
+name: Build Installers and Docker Image
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      - name: Build macOS binary
+        run: pyinstaller --onefile --name otel-integrator main.py
+      - name: Upload macOS binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: otel-integrator-macos
+          path: dist/otel-integrator
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      - name: Build Windows binary
+        run: pyinstaller --onefile --name otel-integrator main.py
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: otel-integrator-windows
+          path: dist/otel-integrator.exe
+
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t otel-integrator:latest .
+      - name: Save Docker image
+        run: docker save otel-integrator:latest | gzip > otel-integrator-docker.tar.gz
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: otel-integrator-docker
+          path: otel-integrator-docker.tar.gz 

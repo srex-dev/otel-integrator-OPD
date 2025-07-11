@@ -1,0 +1,28 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  otlphttp/elastic:
+    endpoint: "{{ services.get('env', {}).get('ELASTIC_APM_ENDPOINT', 'http://localhost:8200') }}"  # Elastic APM endpoint
+  otlphttp/influxdb:
+    endpoint: "{{ services.get('env', {}).get('INFLUXDB_URL', 'http://localhost:8086') }}"  # InfluxDB endpoint
+  otlphttp/grafana:
+    endpoint: "{{ services.get('env', {}).get('GRAFANA_CLOUD_OTLP_ENDPOINT', 'https://otlp-gateway-prod-us-central-0.grafana.net/otlp') }}"  # Grafana Cloud endpoint
+  logging:
+    loglevel: debug
+  debug:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlphttp/elastic, logging]
+    metrics:
+      receivers: [otlp]
+      exporters: [logging, debug]
+    logs:
+      receivers: [otlp]
+      exporters: [logging]

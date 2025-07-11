@@ -1,0 +1,48 @@
+{
+  "dashboard": {
+    "title": "Infrastructure",
+    "description": "Infrastructure and system metrics",
+    "panels": [
+      {
+        "title": "Database Connections",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(db_connections_total[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Message Queue Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(message_queue_messages_total[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Web Server Requests",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=~\"nginx|apache\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Docker Containers",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(container_cpu_usage_seconds_total)",
+            "legendFormat": "Running Containers"
+          }
+        ]
+      }
+    ]
+  }
+}

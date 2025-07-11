@@ -1,0 +1,48 @@
+{
+  "dashboard": {
+    "title": "OpenTelemetry Overview",
+    "description": "High-level overview of all telemetry data",
+    "panels": [
+      {
+        "title": "Service Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(service_name)",
+            "legendFormat": "Total Services"
+          }
+        ]
+      },
+      {
+        "title": "Request Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status_code=~\"5..\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Response Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "dashboard": {
+    "title": "Node.js Services",
+    "description": "Node.js application telemetry",
+    "panels": [
+      {
+        "title": "Node.js Services",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(service_name{service_language=\"nodejs\"})",
+            "legendFormat": "Node.js Services"
+          }
+        ]
+      },
+      {
+        "title": "Node.js Request Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service_language=\"nodejs\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Node.js Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service_language=\"nodejs\",status_code=~\"5..\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Node.js Event Loop Lag",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "nodejs_eventloop_lag_seconds{service_language=\"nodejs\"}",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+# Core requirements for integration tool
+psutil
+requests
+docker
+PyYAML
+typer
+jinja2
+
+# OpenTelemetry SDK and HTTP exporters (Python-based test app)
+opentelemetry-sdk
+opentelemetry-exporter-otlp
+opentelemetry-exporter-otlp-proto-http
+
+# Optional: For CLI user experience and simulation
+tqdm
+rich

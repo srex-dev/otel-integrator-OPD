@@ -1,0 +1,146 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:14250"
+      thrift_http:
+        endpoint: "0.0.0.0:14268"
+  zipkin:
+    endpoint: "0.0.0.0:9411"
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          static_configs:
+            - targets: ['localhost:8888']
+  statsd:
+    endpoint: "0.0.0.0:8125"
+    aggregation_interval: 30s
+  fluentforward:
+    endpoint: "0.0.0.0:8006"
+  syslog:
+    tcp:
+      listen_address: "0.0.0.0:54527"
+    udp:
+      listen_address: "0.0.0.0:54527"
+
+exporters:
+# Elastic Exporter
+{% if 'elastic' in exporters %}
+  otlphttp/elastic:
+    endpoint: "${ELASTIC_APM_ENDPOINT}"  # Elastic APM endpoint
+    headers:
+      Authorization: "Bearer ${ELASTIC_APM_SECRET_TOKEN}"
+    compression: gzip
+    timeout: 30s
+    tls:
+      insecure: ${ELASTIC_TLS_INSECURE}
+      ca_file: "${CA_CERT_PATH}"
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 10000
+{% endif %}
+# Grafana Exporter
+{% if 'grafana' in exporters %}
+  otlphttp/grafana:
+    endpoint: "${GRAFANA_CLOUD_OTLP_ENDPOINT}"  # Grafana Cloud endpoint
+    headers:
+      Authorization: "Bearer ${GRAFANA_CLOUD_API_KEY}"
+    compression: gzip
+    timeout: 30s
+    tls:
+      insecure: ${GRAFANA_TLS_INSECURE}
+      ca_file: "${CA_CERT_PATH}"
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 10000
+{% endif %}
+# InfluxDB Exporter
+{% if 'influxdb' in exporters %}
+  otlphttp/influxdb:
+    endpoint: "${INFLUXDB_URL}"  # InfluxDB endpoint
+    headers:
+      Authorization: "Token ${INFLUXDB_TOKEN}"
+    org: "${INFLUXDB_ORG}"
+    bucket: "${INFLUXDB_BUCKET}"
+    compression: gzip
+    timeout: 30s
+    tls:
+      insecure: ${INFLUXDB_TLS_INSECURE}
+      ca_file: "${CA_CERT_PATH}"
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 10000
+{% endif %}
+  logging:
+    loglevel: debug
+  debug:
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 1500
+  probabilistic_sampler:
+    hash_seed: 22
+    sampling_percentage: 15.3
+  attributes:
+    actions:
+      - key: db.statement
+        action: delete
+      - key: credit_card
+        action: delete
+      - key: service.name
+        value: ${OTEL_SERVICE_NAME}
+        action: upsert
+      - key: service.version
+        value: ${OTEL_SERVICE_VERSION}
+        action: upsert
+      - key: deployment.environment
+        value: ${OTEL_ENVIRONMENT}
+        action: upsert
+      - key: team
+        value: ${OTEL_TEAM}
+        action: upsert
+      - key: owner
+        value: ${OTEL_OWNER}
+        action: upsert
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, jaeger, zipkin]
+      processors: [batch, memory_limiter, probabilistic_sampler, attributes]
+      exporters: [{% if 'elastic' in exporters %}otlphttp/elastic,{% endif %}{% if 'grafana' in exporters %}otlphttp/grafana,{% endif %}logging]
+    metrics:
+      receivers: [otlp, prometheus, statsd]
+      processors: [batch, memory_limiter]
+      exporters: [{% if 'influxdb' in exporters %}otlphttp/influxdb,{% endif %}{% if 'grafana' in exporters %}otlphttp/grafana,{% endif %}logging, debug]
+    logs:
+      receivers: [otlp, fluentforward, syslog]
+      processors: [batch, memory_limiter, attributes]
+      exporters: [otlphttp/elastic, logging] 

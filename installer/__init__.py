@@ -1,0 +1,1 @@
+# Installer package for OpenTelemetry Collector 

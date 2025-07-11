@@ -1,0 +1,48 @@
+{
+  "dashboard": {
+    "title": "Python Services",
+    "description": "Python application telemetry",
+    "panels": [
+      {
+        "title": "Python Services",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(service_name{service_language=\"python\"})",
+            "legendFormat": "Python Services"
+          }
+        ]
+      },
+      {
+        "title": "Python Request Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service_language=\"python\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Python Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service_language=\"python\",status_code=~\"5..\"}[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "title": "Python Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{service_language=\"python\"}",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      }
+    ]
+  }
+}
